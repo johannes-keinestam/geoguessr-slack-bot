@@ -1,5 +1,6 @@
 import { cookie } from "./index";
 import AsynchronousSlackBot from './AsynchronousSlackBot';
+import fetch from 'node-fetch';
 
 export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
     private _mapId: string | undefined;
@@ -61,7 +62,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
 
     protected async _getResponse(): Promise<string> {
         const response = await fetch("https://www.geoguessr.com/api/v3/challenges", {
-            "headers": {
+            headers: {
               "accept": "*/*",
               "accept-language": "en,sv;q=0.9,fi;q=0.8,nb;q=0.7",
               "content-type": "application/json",
@@ -70,19 +71,16 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
               "sec-fetch-dest": "empty",
               "sec-fetch-mode": "cors",
               "sec-fetch-site": "same-origin",
-              "cookie": cookie,
+              "cookie": cookie as string,
             },
-            "referrer": `https://www.geoguessr.com/maps/${this._mapId}/play`,
-            "referrerPolicy": "strict-origin-when-cross-origin",
-            "body": JSON.stringify({
+            body: JSON.stringify({
                 map: this._mapId,
                 forbidMoving: this._forbidMoving,
                 forbidRotating: this._forbidRotating,
                 forbidZooming: this._forbidZooming,
                 timeLimit: this._roundTimeLimit ?? 0,
             }),
-            "method": "POST",
-            "mode": "cors",
+            method: "POST",
         });
 
         const jsonResponse = await response.json();
