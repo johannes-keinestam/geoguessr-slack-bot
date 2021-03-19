@@ -3,6 +3,11 @@ import AsynchronousSlackBot from './AsynchronousSlackBot';
 import fetch from 'node-fetch';
 
 export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
+    private _mapAliases: { [alias: string]: string } = {
+        'diverse-world': '59a1514f17631e74145b6f47',
+        'urban-world': '5b3d510b7a2b425ef47b54fd',
+    };
+
     private _mapId: string | undefined;
     private _roundTimeLimit: number | undefined;
     private _forbidMoving: boolean | undefined;
@@ -57,6 +62,10 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
         }
         else {
             throw new Error(`Invalid command parameters: "${params.join(' ')}". Expected either "mapId" (e.g. "59a1514f17631e74145b6f47"), "mapId timeLimit" (e.g. "59a1514f17631e74145b6f47 90"), or "mapId timeLimit forbidMoving forbidRotating forbidZooming (e.g. "59a1514f17631e74145b6f47 60 true false false")`);
+        }
+
+        if (Object.keys(this._mapAliases).includes(this._mapId)) {
+            this._mapId = this._mapAliases[this._mapId];
         }
     }
 
