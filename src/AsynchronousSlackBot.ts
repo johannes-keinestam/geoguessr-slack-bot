@@ -24,9 +24,9 @@ export default abstract class AsynchronousSlackBot {
             text: 'Generating challenge...',
         });
 
-        let response = '';
+        let response = {};
         try {
-            response = await this._getResponse();
+            response = await this._getResponse(req.body.user_name);
         }
         catch (processingError) {
             return await this._sendAsynchronousSlackResponse(req.body['response_url'], processingError.message);
@@ -35,21 +35,21 @@ export default abstract class AsynchronousSlackBot {
         await this._sendAsynchronousSlackResponse(req.body['response_url'], response);
     }
 
-    private async _sendAsynchronousSlackResponse(responseUrl: string, response: string) {
+    private async _sendAsynchronousSlackResponse(responseUrl: string, response: { [key: string]: any }) {
         const requestOptions = {
             headers: {
                 'content-type': 'application/json',
             },
             body: JSON.stringify({
                 response_type: 'in_channel',
-                text: response,
+                ...response,
             }),
         };
         await request.post(responseUrl, requestOptions);
     }
 
 
-    protected abstract _getResponse(): Promise<string>;
+    protected abstract _getResponse(user: string): Promise<{ [key: string]: any }>;
     protected abstract get _name(): string;
     protected abstract _isEnvironmentSetup(): boolean;
     protected abstract _parseParams(params: string[]): void;
