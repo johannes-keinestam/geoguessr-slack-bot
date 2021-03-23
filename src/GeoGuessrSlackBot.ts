@@ -95,13 +95,13 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
             method: "POST",
         });
 
-        const jsonResponse = { token: 'temp' }; //await response.json();
+        const jsonResponse = await response.json();
         if (Object.keys(jsonResponse).includes('token')) {
             let settings = [];
             if (this._forbidMoving) settings.push('No moving');
             if (this._forbidZooming) settings.push('No zooming');
             if (this._forbidRotating) settings.push('No panning');
-            const settingsString = settings.join(', ') ?? 'Moving, zooming, panning allowed';
+            const settingsString = settings.join(', ') || 'Moving, zooming, panning allowed';
 
             return {
                 blocks: [
