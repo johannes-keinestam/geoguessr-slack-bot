@@ -6,6 +6,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
     private _mapAliases: { [alias: string]: string } = {
         'diverse-world': '59a1514f17631e74145b6f47',
         'urban-world': '5b3d510b7a2b425ef47b54fd',
+        'i-saw-the-sign': '5cfda2c9bc79e16dd866104d',
     };
 
     private _mapId: string | undefined;
