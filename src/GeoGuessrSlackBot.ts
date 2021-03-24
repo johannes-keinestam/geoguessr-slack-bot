@@ -101,6 +101,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
             const settingsString = settings.join(', ') || 'Moving, zooming, panning allowed';
 
             return {
+                text: 'New GeoGuessr challenge!',
                 blocks: [
                     {
                         type: 'header',
