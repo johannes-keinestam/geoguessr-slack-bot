@@ -9,7 +9,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
         'i-saw-the-sign': '5cfda2c9bc79e16dd866104d',
     };
 
-    private _mapId: string | undefined;
+    private _map: string | undefined;
     private _roundTimeLimit: number | undefined;
     private _forbidMoving: boolean | undefined;
     private _forbidRotating: boolean | undefined;
@@ -27,51 +27,47 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
         if (!params) {
             throw new Error('Expected command parameters, but got none.');
         }
-        if (params.length === 1) {
-            this._mapId = params[0];
 
-            this._roundTimeLimit = undefined;
-            this._forbidMoving = false;
-            this._forbidRotating = false;
-            this._forbidZooming = false;
+        this._roundTimeLimit = 0;
+        this._forbidMoving = false;
+        this._forbidRotating = false;
+        this._forbidZooming = false;
+
+        if (params.length === 0 || params.length > 5) {
+            throw new Error(`Invalid command parameters: "${params.join(' ')}". Expected either "map-id" (e.g. "59a1514f17631e74145b6f47"), "map-id time-limit" (e.g. "59a1514f17631e74145b6f47 90"), or "map-id time-limit [no-move] [no-pan] [no-zoom] (e.g. "59a1514f17631e74145b6f47 60 no-move" or "59a1514f17631e74145b6f47 60 no-move no-zoom no-pan")`);
         }
-        else if (params.length === 2) {
-            this._mapId = params[0];
+
+        // The first parameter is always the map id or map alias.
+        if (params.length >= 1) {
+            this._map = params[0];
+        }
+
+        // The second parameter, if set, is always the 
+        if (params.length >= 2) {
             this._roundTimeLimit = Number.parseInt(params[1]);
             if (!Number.isInteger(this._roundTimeLimit)) {
-                throw new Error(`Invalid timeLimit parameter: "${params[1]}". Expected integer.`);
+                throw new Error(`Invalid time-limit parameter: "${params[1]}". Expected integer.`);
+            }
+        }
+
+        const validRules = ['no-move', 'no-pan', 'no-zoom'];
+        for (const providedRule of params.slice(2)) {
+            if (!validRules.includes(providedRule)) {
+                throw new Error(`Invalid rule parameter: "${providedRule}". Expected one of: ${validRules.join(', ')}.`);
             }
 
-            this._forbidMoving = false;
-            this._forbidRotating = false;
-            this._forbidZooming = false;
-        }
-        else if (params.length === 5) {
-            this._mapId = params[0];
-            this._roundTimeLimit = Number.parseInt(params[1]);
-            if (!Number.isInteger(this._roundTimeLimit)) {
-                throw new Error(`Invalid timeLimit parameter: "${params[1]}". Expected integer.`);
-            }
-
-            const validBools = ['true', 'false'];
-            if (!validBools.includes(params[2]) || !validBools.includes(params[3]) || !validBools.includes(params[4])) {
-                throw new Error(`Invalid forbid parameters: "${params[2]} ${params[3]} ${params[4]}". All must be booleans, either "true" or "false".`);
-            }
-            this._forbidMoving = params[2] === 'true';
-            this._forbidRotating = params[3] === 'true';
-            this._forbidZooming = params[4] === 'true';
-        }
-        else {
-            throw new Error(`Invalid command parameters: "${params.join(' ')}". Expected either "mapId" (e.g. "59a1514f17631e74145b6f47"), "mapId timeLimit" (e.g. "59a1514f17631e74145b6f47 90"), or "mapId timeLimit forbidMoving forbidRotating forbidZooming (e.g. "59a1514f17631e74145b6f47 60 true false false")`);
+            this._forbidMoving = this._forbidMoving || providedRule === 'no-move';
+            this._forbidRotating = this._forbidRotating || providedRule === 'no-pan';
+            this._forbidZooming = this._forbidZooming || providedRule === 'no-zoom';
         }
     }
 
     protected async _getResponse(user: string): Promise<{ [key: string]: any }> {
-        if (this._mapId === undefined) {
-            throw new Error(`No mapId provided.`);
+        if (this._map === undefined) {
+            throw new Error(`No map provided.`);
         }
 
-        const map = Object.keys(this._mapAliases).includes(this._mapId) ? this._mapAliases[this._mapId] : this._mapId;
+        const mapId = Object.keys(this._mapAliases).includes(this._map) ? this._mapAliases[this._map] : this._map;
         const timeLimit = this._roundTimeLimit ?? 0;
 
         const response = await fetch('https://www.geoguessr.com/api/v3/challenges', {
@@ -87,7 +83,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
               "cookie": cookie as string,
             },
             body: JSON.stringify({
-                map,
+                map: mapId,
                 forbidMoving: this._forbidMoving,
                 forbidRotating: this._forbidRotating,
                 forbidZooming: this._forbidZooming,
@@ -123,7 +119,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
                             },
                             {
                                 type: 'mrkdwn',
-                                text: `*Map:*\n${this._mapId}`,
+                                text: `*Map:*\n${this._map}`,
                             },
                         ],
                     },
