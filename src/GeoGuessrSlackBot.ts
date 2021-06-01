@@ -8,6 +8,7 @@ export default class GeoGuessrSlackBot extends AsynchronousSlackBot {
         'urban-world': '5b3d510b7a2b425ef47b54fd',
         'i-saw-the-sign': '5cfda2c9bc79e16dd866104d',
         'geodetective': '5d374dc141d2a43c1cd4527b',
+        'drone': '5eca37c3375e6a6a689fbd75',
     };
 
     private _map: string | undefined;
